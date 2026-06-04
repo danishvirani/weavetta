@@ -52,3 +52,17 @@ export function getDB(): Promise<IDBPDatabase<WeavettaDB>> {
   }
   return dbPromise;
 }
+
+// --- API keys (BYOK) — these never leave the browser. ---
+
+export async function dbGetAllApiKeys(): Promise<ApiKeyRecord[]> {
+  return (await getDB()).getAll("apiKeys");
+}
+
+export async function dbPutApiKey(record: ApiKeyRecord): Promise<void> {
+  await (await getDB()).put("apiKeys", record);
+}
+
+export async function dbDeleteApiKey(provider: string): Promise<void> {
+  await (await getDB()).delete("apiKeys", provider);
+}

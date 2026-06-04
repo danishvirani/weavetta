@@ -8,6 +8,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { formatUsd } from "@/lib/cost";
+import { ApiKeysDialog } from "@/components/ApiKeysDialog";
 
 export function CostBar() {
   // v0.0: placeholder. feat(cost-preview) wires this to the live graph estimate.
@@ -23,6 +24,7 @@ export function CostBar() {
       </div>
 
       <div className="flex items-center gap-3">
+        <ApiKeysDialog />
         <Tooltip>
           <TooltipTrigger
             render={
