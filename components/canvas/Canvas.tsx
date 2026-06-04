@@ -17,6 +17,7 @@ import { WorkflowNode } from "./nodes/WorkflowNode";
 import { InputNode } from "./nodes/InputNode";
 import { ExportNode } from "./nodes/ExportNode";
 import { LLMNode } from "./nodes/LLMNode";
+import { PreviewNode } from "./nodes/PreviewNode";
 import { Palette, DRAG_MIME } from "./Palette";
 
 function Flow() {
@@ -28,10 +29,10 @@ function Flow() {
       input: InputNode,
       export: ExportNode,
       llm: LLMNode,
+      preview: PreviewNode,
       split: WorkflowNode,
       loop: WorkflowNode,
       format: WorkflowNode,
-      preview: WorkflowNode,
     }),
     [],
   );

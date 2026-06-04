@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Play } from "lucide-react";
+import { Play, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -11,6 +11,7 @@ import {
 import { formatUsd } from "@/lib/cost";
 import { estimateGraphCost } from "@/lib/estimate";
 import { useWorkflow } from "@/lib/store";
+import { useRunner } from "@/lib/run-store";
 import { ApiKeysDialog } from "@/components/ApiKeysDialog";
 
 const fmtTokens = new Intl.NumberFormat("en-US");
@@ -18,9 +19,15 @@ const fmtTokens = new Intl.NumberFormat("en-US");
 export function CostBar() {
   const nodes = useWorkflow((s) => s.nodes);
   const edges = useWorkflow((s) => s.edges);
+  const status = useRunner((s) => s.status);
+  const runError = useRunner((s) => s.error);
+  const run = useRunner((s) => s.run);
+  const stop = useRunner((s) => s.stop);
 
   // The wedge: recompute the estimate live as the graph or any prompt changes.
   const cost = useMemo(() => estimateGraphCost(nodes, edges), [nodes, edges]);
+  const canRun = cost.llmNodes > 0;
+  const running = status === "running";
 
   return (
     <header className="flex h-14 shrink-0 items-center justify-between border-b px-4">
@@ -51,10 +58,40 @@ export function CostBar() {
           </TooltipContent>
         </Tooltip>
 
-        <Button size="sm" className="gap-1.5" disabled>
-          <Play className="size-3.5" />
-          Run
-        </Button>
+        {status === "error" && runError && (
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <span className="max-w-[14rem] truncate text-xs text-destructive">
+                  {runError}
+                </span>
+              }
+            />
+            <TooltipContent className="max-w-xs">{runError}</TooltipContent>
+          </Tooltip>
+        )}
+
+        {running ? (
+          <Button
+            size="sm"
+            variant="secondary"
+            className="gap-1.5"
+            onClick={stop}
+          >
+            <Square className="size-3.5 fill-current" />
+            Stop
+          </Button>
+        ) : (
+          <Button
+            size="sm"
+            className="gap-1.5"
+            onClick={() => void run()}
+            disabled={!canRun}
+          >
+            <Play className="size-3.5" />
+            Run
+          </Button>
+        )}
       </div>
     </header>
   );
