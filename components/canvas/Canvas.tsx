@@ -1,36 +1,71 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import {
   ReactFlow,
+  ReactFlowProvider,
   Background,
   Controls,
   MiniMap,
+  useReactFlow,
   type NodeTypes,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useWorkflow } from "@/lib/store";
-import { DemoNode } from "./nodes/DemoNode";
+import type { NodeKind } from "@/lib/types";
+import { WorkflowNode } from "./nodes/WorkflowNode";
+import { Palette, DRAG_MIME } from "./Palette";
 
-export function Canvas() {
-  const { nodes, edges, onNodesChange, onEdgesChange, onConnect } = useWorkflow();
-  const nodeTypes = useMemo<NodeTypes>(() => ({ demo: DemoNode }), []);
+function Flow() {
+  const { nodes, edges, onNodesChange, onEdgesChange, onConnect, addNode } =
+    useWorkflow();
+  const { screenToFlowPosition } = useReactFlow();
+  const nodeTypes = useMemo<NodeTypes>(() => ({ workflow: WorkflowNode }), []);
+
+  const onDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  }, []);
+
+  const onDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      const kind = e.dataTransfer.getData(DRAG_MIME) as NodeKind;
+      if (!kind) return;
+      const position = screenToFlowPosition({ x: e.clientX, y: e.clientY });
+      addNode(kind, position);
+    },
+    [screenToFlowPosition, addNode],
+  );
 
   return (
-    <ReactFlow
-      nodes={nodes}
-      edges={edges}
-      nodeTypes={nodeTypes}
-      onNodesChange={onNodesChange}
-      onEdgesChange={onEdgesChange}
-      onConnect={onConnect}
-      fitView
-      proOptions={{ hideAttribution: true }}
-      className="bg-background"
-    >
-      <Background gap={16} className="!bg-muted/30" />
-      <Controls className="!shadow-sm" />
-      <MiniMap pannable zoomable className="!rounded-lg !border" />
-    </ReactFlow>
+    <div className="flex-1" onDragOver={onDragOver} onDrop={onDrop}>
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        nodeTypes={nodeTypes}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onConnect={onConnect}
+        fitView
+        proOptions={{ hideAttribution: true }}
+        className="bg-background"
+      >
+        <Background gap={16} className="!bg-muted/30" />
+        <Controls className="!shadow-sm" />
+        <MiniMap pannable zoomable className="!rounded-lg !border" />
+      </ReactFlow>
+    </div>
+  );
+}
+
+export function Canvas() {
+  return (
+    <ReactFlowProvider>
+      <div className="flex h-full min-h-0">
+        <Palette />
+        <Flow />
+      </div>
+    </ReactFlowProvider>
   );
 }
