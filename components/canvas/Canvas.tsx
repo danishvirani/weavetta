@@ -16,6 +16,7 @@ import type { NodeKind } from "@/lib/types";
 import { WorkflowNode } from "./nodes/WorkflowNode";
 import { InputNode } from "./nodes/InputNode";
 import { ExportNode } from "./nodes/ExportNode";
+import { LLMNode } from "./nodes/LLMNode";
 import { Palette, DRAG_MIME } from "./Palette";
 
 function Flow() {
@@ -26,7 +27,7 @@ function Flow() {
     () => ({
       input: InputNode,
       export: ExportNode,
-      llm: WorkflowNode,
+      llm: LLMNode,
       split: WorkflowNode,
       loop: WorkflowNode,
       format: WorkflowNode,

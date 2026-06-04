@@ -23,3 +23,7 @@ export const DEFAULT_MODEL = MODELS[1].model; // gpt-4o-mini — cheapest defaul
 export function getModelPrice(model: string): ModelPrice | undefined {
   return MODELS.find((m) => m.model === model);
 }
+
+export function modelsForProvider(provider: LLMProvider): ModelPrice[] {
+  return MODELS.filter((m) => m.provider === provider);
+}
