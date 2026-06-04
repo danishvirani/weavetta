@@ -22,6 +22,8 @@ interface WorkflowState {
   onEdgesChange: OnEdgesChange;
   onConnect: OnConnect;
   addNode: (kind: NodeKind, position: XYPosition) => void;
+  updateNodeData: (id: string, patch: Partial<NodeData>) => void;
+  updateNodeParams: (id: string, patch: Record<string, unknown>) => void;
 }
 
 function newId(kind: NodeKind): string {
@@ -31,9 +33,9 @@ function newId(kind: NodeKind): string {
 // v0.0 seed: a tiny Input -> LLM -> Preview graph so the canvas reads as a
 // workflow on first load, not a blank grid.
 const initialNodes: FlowNode[] = [
-  { id: "input-seed", type: "workflow", position: { x: 0, y: 80 }, data: { label: "Input", kind: "input" } },
-  { id: "llm-seed", type: "workflow", position: { x: 280, y: 80 }, data: { label: "LLM Call", kind: "llm" } },
-  { id: "preview-seed", type: "workflow", position: { x: 560, y: 80 }, data: { label: "Preview", kind: "preview" } },
+  { id: "input-seed", type: "input", position: { x: 0, y: 80 }, data: { label: "Input", kind: "input" } },
+  { id: "llm-seed", type: "llm", position: { x: 300, y: 80 }, data: { label: "LLM Call", kind: "llm" } },
+  { id: "preview-seed", type: "preview", position: { x: 600, y: 80 }, data: { label: "Preview", kind: "preview" } },
 ];
 
 const initialEdges: Edge[] = [
@@ -56,10 +58,26 @@ export const useWorkflow = create<WorkflowState>((set, get) => ({
   addNode: (kind, position) => {
     const node: FlowNode = {
       id: newId(kind),
-      type: "workflow",
+      type: kind,
       position,
       data: { label: NODE_REGISTRY[kind].label, kind },
     };
     set({ nodes: [...get().nodes, node] });
+  },
+  updateNodeData: (id, patch) => {
+    set({
+      nodes: get().nodes.map((n) =>
+        n.id === id ? { ...n, data: { ...n.data, ...patch } } : n,
+      ),
+    });
+  },
+  updateNodeParams: (id, patch) => {
+    set({
+      nodes: get().nodes.map((n) =>
+        n.id === id
+          ? { ...n, data: { ...n.data, params: { ...n.data.params, ...patch } } }
+          : n,
+      ),
+    });
   },
 }));

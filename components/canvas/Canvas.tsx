@@ -14,13 +14,26 @@ import "@xyflow/react/dist/style.css";
 import { useWorkflow } from "@/lib/store";
 import type { NodeKind } from "@/lib/types";
 import { WorkflowNode } from "./nodes/WorkflowNode";
+import { InputNode } from "./nodes/InputNode";
+import { ExportNode } from "./nodes/ExportNode";
 import { Palette, DRAG_MIME } from "./Palette";
 
 function Flow() {
   const { nodes, edges, onNodesChange, onEdgesChange, onConnect, addNode } =
     useWorkflow();
   const { screenToFlowPosition } = useReactFlow();
-  const nodeTypes = useMemo<NodeTypes>(() => ({ workflow: WorkflowNode }), []);
+  const nodeTypes = useMemo<NodeTypes>(
+    () => ({
+      input: InputNode,
+      export: ExportNode,
+      llm: WorkflowNode,
+      split: WorkflowNode,
+      loop: WorkflowNode,
+      format: WorkflowNode,
+      preview: WorkflowNode,
+    }),
+    [],
+  );
 
   const onDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
