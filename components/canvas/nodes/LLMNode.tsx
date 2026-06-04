@@ -12,7 +12,9 @@ const fieldClass =
 
 export function LLMNode({ id, data, selected }: NodeProps<FlowNode>) {
   const updateNodeParams = useWorkflow((s) => s.updateNodeParams);
-  const { provider, model, prompt, temperature } = readLLMParams(data.params);
+  const { provider, model, prompt, temperature, maxTokens } = readLLMParams(
+    data.params,
+  );
   const models = modelsForProvider(provider);
 
   function onProvider(p: LLMProvider) {
@@ -86,6 +88,21 @@ export function LLMNode({ id, data, selected }: NodeProps<FlowNode>) {
               {temperature.toFixed(1)}
             </span>
           </span>
+        </label>
+
+        <label className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
+          <span>max output tokens</span>
+          <input
+            type="number"
+            min={1}
+            step={64}
+            value={maxTokens}
+            onChange={(e) =>
+              updateNodeParams(id, { maxTokens: Math.max(1, Number(e.target.value)) })
+            }
+            className="nodrag w-20 rounded-md border bg-transparent px-2 py-1 text-right tabular-nums text-foreground outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            aria-label="Max output tokens"
+          />
         </label>
       </div>
     </NodeShell>

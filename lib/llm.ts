@@ -8,6 +8,10 @@ export interface LLMParams {
   model: string;
   prompt: string;
   temperature: number;
+  // Upper bound on generated tokens. Drives the output side of the cost
+  // estimate (we can't know real output length before the run, so we price
+  // the ceiling) and becomes max_tokens on the real call later.
+  maxTokens: number;
 }
 
 export const PROVIDERS: { value: LLMProvider; label: string }[] = [
@@ -25,6 +29,7 @@ export const DEFAULT_LLM_PARAMS: LLMParams = {
   model: DEFAULT_MODEL,
   prompt: "{{input}}",
   temperature: 0.7,
+  maxTokens: 512,
 };
 
 export function readLLMParams(params?: Record<string, unknown>): LLMParams {
@@ -36,6 +41,10 @@ export function readLLMParams(params?: Record<string, unknown>): LLMParams {
       typeof params?.temperature === "number"
         ? params.temperature
         : DEFAULT_LLM_PARAMS.temperature,
+    maxTokens:
+      typeof params?.maxTokens === "number" && params.maxTokens > 0
+        ? params.maxTokens
+        : DEFAULT_LLM_PARAMS.maxTokens,
   };
 }
 

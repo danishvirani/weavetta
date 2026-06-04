@@ -21,7 +21,16 @@ export const MODELS: ModelPrice[] = [
 export const DEFAULT_MODEL = MODELS[1].model; // gpt-4o-mini — cheapest default
 
 export function getModelPrice(model: string): ModelPrice | undefined {
-  return MODELS.find((m) => m.model === model);
+  const exact = MODELS.find((m) => m.model === model);
+  if (exact) return exact;
+  // OpenRouter slugs are "vendor/model" (e.g. "anthropic/claude-sonnet-4.5").
+  // Fall back to the part after the last slash so a slug that names a model we
+  // do know still gets priced instead of silently dropping out of the estimate.
+  if (model.includes("/")) {
+    const suffix = model.slice(model.lastIndexOf("/") + 1);
+    return MODELS.find((m) => m.model === suffix);
+  }
+  return undefined;
 }
 
 export function modelsForProvider(provider: LLMProvider): ModelPrice[] {
