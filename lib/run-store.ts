@@ -12,6 +12,10 @@ type RunStatus = "idle" | "running" | "done" | "error";
 interface RunnerState {
   status: RunStatus;
   error?: string;
+  // Demo mode simulates LLM calls locally — no key, no network, no CORS. On by
+  // default so the app runs end-to-end out of the box; flip off for real BYOK.
+  demoMode: boolean;
+  setDemoMode: (on: boolean) => void;
   run: () => Promise<void>;
   stop: () => void;
   _ac?: AbortController;
@@ -20,6 +24,8 @@ interface RunnerState {
 export const useRunner = create<RunnerState>((set, get) => ({
   status: "idle",
   error: undefined,
+  demoMode: true,
+  setDemoMode: (on) => set({ demoMode: on }),
   run: async () => {
     if (get().status === "running") return;
 
@@ -34,6 +40,7 @@ export const useRunner = create<RunnerState>((set, get) => ({
     try {
       await runGraph(nodes, edges, {
         getKey: (p: LLMProvider) => keys[p],
+        simulate: get().demoMode,
         onNodeStart: (id, input) =>
           updateNodeDebug(id, {
             lastInput: input,

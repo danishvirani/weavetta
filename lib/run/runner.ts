@@ -4,7 +4,7 @@ import type { LLMProvider } from "../types";
 import { getUpstreamIds, nodeText } from "../graph";
 import { resolvePrompt } from "../estimate";
 import { readLLMParams } from "../llm";
-import { streamChat } from "./providers";
+import { streamChat, simulateStream } from "./providers";
 
 // Kahn topological sort so each node runs after its upstreams. Falls back to the
 // original order for any nodes left in a cycle (the canvas allows cycles; a
@@ -40,6 +40,8 @@ export function topoSort(nodes: FlowNode[], edges: Edge[]): FlowNode[] {
 
 export interface RunCallbacks {
   getKey: (provider: LLMProvider) => string | undefined;
+  // When true, LLM nodes run a local simulated stream — no key, no network.
+  simulate?: boolean;
   onNodeStart: (nodeId: string, input: string) => void;
   onNodeDelta: (nodeId: string, output: string) => void;
   onNodeDone: (nodeId: string, output: string) => void;
@@ -76,19 +78,20 @@ export async function runGraph(
       const { provider, model, prompt, temperature, maxTokens } = readLLMParams(
         node.data.params,
       );
-      const apiKey = cb.getKey(provider);
       const resolved = resolvePrompt(prompt, upstreamText(node.id));
       cb.onNodeStart(node.id, resolved);
 
-      if (!apiKey) {
-        const msg = `No ${provider} key — add it in Keys.`;
-        cb.onNodeError(node.id, msg);
-        throw new Error(msg);
-      }
-
-      try {
-        let acc = "";
-        for await (const delta of streamChat({
+      let stream: AsyncGenerator<string>;
+      if (cb.simulate) {
+        stream = simulateStream(resolved, maxTokens, cb.signal);
+      } else {
+        const apiKey = cb.getKey(provider);
+        if (!apiKey) {
+          const msg = `No ${provider} key — add it in Keys, or turn on Demo.`;
+          cb.onNodeError(node.id, msg);
+          throw new Error(msg);
+        }
+        stream = streamChat({
           provider,
           model,
           prompt: resolved,
@@ -96,7 +99,12 @@ export async function runGraph(
           maxTokens,
           apiKey,
           signal: cb.signal,
-        })) {
+        });
+      }
+
+      try {
+        let acc = "";
+        for await (const delta of stream) {
           acc += delta;
           cb.onNodeDelta(node.id, acc);
         }

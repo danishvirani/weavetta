@@ -123,6 +123,50 @@ export async function* deltasFrom(
   }
 }
 
+// --- Demo mode: a local, no-key, no-network simulated stream. ---
+// Lets the whole build→cost→run→stream loop work on stage without touching a
+// provider (no key, no CORS risk). The cost preview still shows the real
+// estimate for the chosen model — only the execution is simulated.
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+function buildDemoResponse(prompt: string): string {
+  const firstLine =
+    prompt
+      .split("\n")
+      .map((s) => s.trim())
+      .find(Boolean) ?? "";
+  const topic = firstLine.length > 80 ? `${firstLine.slice(0, 80)}…` : firstLine;
+  return [
+    topic ? `Here's a draft for: "${topic}"` : "Here's a draft:",
+    "",
+    "Lightweight. Fast. Built for the long run.",
+    "Step into your best mile yet — breathable comfort, zero break-in,",
+    "ready the moment you are.",
+    "",
+    "→ Ships Friday. Be first out the door.",
+  ].join("\n");
+}
+
+export async function* simulateStream(
+  prompt: string,
+  maxTokens: number,
+  signal?: AbortSignal,
+): AsyncGenerator<string> {
+  const tokens = buildDemoResponse(prompt).match(/\S+\s*/g) ?? [];
+  const cap = Math.max(20, Math.min(maxTokens, 120));
+  let count = 0;
+  for (const t of tokens) {
+    if (signal?.aborted) throw new DOMException("Run cancelled", "AbortError");
+    if (count >= cap) break;
+    yield t;
+    count += 1;
+    await sleep(40);
+  }
+}
+
 // Build the request, validate the response, and stream normalised text deltas.
 export async function* streamChat(req: ChatRequest): AsyncGenerator<string> {
   const res = await fetch(ENDPOINTS[req.provider], {
