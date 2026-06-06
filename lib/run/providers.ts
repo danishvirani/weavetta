@@ -132,30 +132,23 @@ function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-function buildDemoResponse(prompt: string): string {
-  const firstLine =
-    prompt
-      .split("\n")
-      .map((s) => s.trim())
-      .find(Boolean) ?? "";
-  const topic = firstLine.length > 80 ? `${firstLine.slice(0, 80)}…` : firstLine;
+function buildDemoResponse(): string {
+  // A polished, plausible answer to the seed task (3 taglines), so the demo run
+  // reads as a real result. In Live mode this is replaced by the model output.
   return [
-    topic ? `Here's a draft for: "${topic}"` : "Here's a draft:",
+    "Three taglines, ready to test:",
     "",
-    "Lightweight. Fast. Built for the long run.",
-    "Step into your best mile yet — breathable comfort, zero break-in,",
-    "ready the moment you are.",
-    "",
-    "→ Ships Friday. Be first out the door.",
+    "1. Lighter than your excuses.",
+    "2. Zero break-in. All breakthrough.",
+    "3. Out the door by Friday.",
   ].join("\n");
 }
 
 export async function* simulateStream(
-  prompt: string,
   maxTokens: number,
   signal?: AbortSignal,
 ): AsyncGenerator<string> {
-  const tokens = buildDemoResponse(prompt).match(/\S+\s*/g) ?? [];
+  const tokens = buildDemoResponse().match(/\S+\s*/g) ?? [];
   const cap = Math.max(20, Math.min(maxTokens, 120));
   let count = 0;
   for (const t of tokens) {

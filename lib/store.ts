@@ -32,12 +32,33 @@ function newId(kind: NodeKind): string {
   return `${kind}-${crypto.randomUUID().slice(0, 8)}`;
 }
 
-// v0.0 seed: a tiny Input -> LLM -> Preview graph so the canvas reads as a
-// workflow on first load, not a blank grid.
+// Seed graph: a worked example that runs the moment the app opens. The Input is
+// pre-filled and the LLM has a real instruction, so clicking Run immediately
+// produces something useful — the canvas teaches itself instead of starting blank.
+const SEED_INPUT =
+  "A lightweight running shoe. Breathable knit upper, no break-in, $129, ships Friday.";
+const SEED_PROMPT =
+  "Write 3 short, punchy marketing taglines for this product:\n\n{{input}}";
+
 const initialNodes: FlowNode[] = [
-  { id: "input-seed", type: "input", position: { x: 0, y: 80 }, data: { label: "Input", kind: "input" } },
-  { id: "llm-seed", type: "llm", position: { x: 300, y: 80 }, data: { label: "LLM Call", kind: "llm" } },
-  { id: "preview-seed", type: "preview", position: { x: 600, y: 80 }, data: { label: "Preview", kind: "preview" } },
+  {
+    id: "input-seed",
+    type: "input",
+    position: { x: 0, y: 80 },
+    data: { label: "Input", kind: "input", params: { text: SEED_INPUT } },
+  },
+  {
+    id: "llm-seed",
+    type: "llm",
+    position: { x: 320, y: 80 },
+    data: { label: "LLM Call", kind: "llm", params: { prompt: SEED_PROMPT } },
+  },
+  {
+    id: "preview-seed",
+    type: "preview",
+    position: { x: 700, y: 80 },
+    data: { label: "Preview", kind: "preview" },
+  },
 ];
 
 const initialEdges: Edge[] = [

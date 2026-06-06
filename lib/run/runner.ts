@@ -83,7 +83,7 @@ export async function runGraph(
 
       let stream: AsyncGenerator<string>;
       if (cb.simulate) {
-        stream = simulateStream(resolved, maxTokens, cb.signal);
+        stream = simulateStream(maxTokens, cb.signal);
       } else {
         const apiKey = cb.getKey(provider);
         if (!apiKey) {
